@@ -92,7 +92,7 @@ if __name__ == '__main__':
             torch.save(model.state_dict(), f'./{save_path}/{model.name}_best.pt')
             loss_val_best = loss_val
 
-    model.save_model(f'./{save_path}/{model.name}_last.pt')
+    torch.save(model.state_dict(), f'./{save_path}/{model.name}_last.pt')
 
     fig = plt.figure()
     plt.title('Training loss')
