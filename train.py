@@ -14,7 +14,8 @@ def train(model, device, train_loader, optimizer, criterion):
 
     loss_total = 0
 
-    for inputs, labels in train_loader:
+    for inputs, labels in tqdm(train_loader, position=1, leave=False):
+    # for inputs, labels in train_loader:
         optimizer.zero_grad()
         inputs, labels = inputs.to(device), labels.to(device)
         
@@ -35,7 +36,8 @@ def valid(model, val_loader, criterion, device):
 
     loss_total = 0
 
-    for inputs, labels in val_loader:
+    for inputs, labels in tqdm(val_loader, position=1, leave=False):
+    # for inputs, labels in val_loader:
         inputs, labels = inputs.to(device), labels.to(device)
         
         output = model(inputs)
@@ -47,33 +49,37 @@ def valid(model, val_loader, criterion, device):
     return loss_avg
 
 if __name__ == '__main__':
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'using: {device}')
 
     # dataset
     dataset_dir = os.path.join('lunch500')
     transform = transforms.Compose([
         transforms.ToTensor(),
+        # transforms.RandomHorizontalFlip(),
         transforms.Resize((224, 224)),
     ])
-    
+
     lunch500_train = Lunch500(root_dir=dataset_dir, mode='train',transform=transform)
     lunch500_val = Lunch500(root_dir=dataset_dir, mode='valid',transform=transform)
 
     # data loader
-    loader_train = DataLoader(lunch500_train, batch_size=batch_size, num_workers=num_workers, shuffle=True)
-    loader_val = DataLoader(lunch500_val, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+    loader_train = DataLoader(lunch500_train, batch_size=batch_size, num_workers=num_workers, pin_memory=True, shuffle=True)
+    loader_val = DataLoader(lunch500_val, batch_size=batch_size, num_workers=num_workers, pin_memory=True, shuffle=False)
 
     # load model
-    out_features = len(label_names)
-    model = ResNet18(out_features=out_features, pretrained=True)
-    mdoel = model.to(device)
+    out_features = len(lunch500_train.labels)
+    model = ResNet18(out_features=out_features, pretrained=True, freeze_pretrained=False).to(device)
+    # model = MobileNet_V3_Small(out_features=out_features, pretrained=True, freeze_pretrained=False).to(device)
+    # model.name += '_HorizontalFlip'
+    # model.name += '_CutMix'
 
     # train
     save_path = f'{model.name}_results'
     if not os.path.exists(save_path):
         os.mkdir(save_path)
-        print('make path')
+        print(f'make path: {save_path}')
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     criterion = torch.nn.CrossEntropyLoss()
@@ -81,7 +87,7 @@ if __name__ == '__main__':
     loss_train_list = []
     loss_val_list = []
     loss_val_best = float('inf')
-    for epoch in tqdm(range(epoch_num), leave=False):
+    for epoch in tqdm(range(epoch_num), position=0, leave=True):
         loss_train = train(model, device, loader_train, optimizer, criterion)
         loss_val = valid(model, loader_val, criterion, device)
 
@@ -93,12 +99,12 @@ if __name__ == '__main__':
             loss_val_best = loss_val
 
     torch.save(model.state_dict(), f'./{save_path}/{model.name}_last.pt')
-
+    
     fig = plt.figure()
     plt.title('Training loss')
     plt.plot(loss_val_list, 'r', label='valid')
     plt.plot(loss_train_list, 'b', label='train')
     plt.xlabel('Epoch')
-    plt.ylabel('Loss (MSE)')
+    plt.ylabel('Loss (Cross Entropy)')
     plt.legend()
-    fig.savefig('model_loss.png')
+    fig.savefig(f'./{save_path}/loss_{model.name}.png')

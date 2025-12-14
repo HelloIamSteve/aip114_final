@@ -3,6 +3,7 @@ import torchvision.transforms as transforms
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams['font.family'] = 'Noto Sans TC'
 import os
 
 from config import *
@@ -45,6 +46,8 @@ if __name__ == '__main__':
     test_idx = 1500
     img, label = lunch500_dataset[test_idx]
     print(f'img.shape: {img.shape}, label: {label}')
+    print(f'{lunch500_dataset.labels[label]}')
 
     img = (img.permute((1, 2, 0)).numpy() * 255).astype(np.uint8)
-    plt.imsave(f'{label_names[label]}.png', img)
+    plt.imshow(img)
+    plt.show()
