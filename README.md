@@ -26,6 +26,7 @@ The directory should look like:
 python ./train.py
 ```
 Use `--model ResNet18/ MobileNet_V3_Small` to specify model, `--flip` to enable RandomHorizontalFlip(), `--cutmix` to enable CutMix.
+</br>
 e.g.
 ```
 python3 ./train.py --model ResNet18 --flip
@@ -39,9 +40,10 @@ Edit `config.py` to modify the hyperparameters.
 python ./test.py
 ```
 Use `--model ResNet18/ MobileNet_V3_Small` to specify model, `--flip`, `--cutmix` to specify data argumentation it uses.
-
+</br>
 e.g.
 ```
 python3 ./test.py --model MobileNet_V3_Small --flip --cutmix
 ```
 Will test MobileNetV3-Small trained using RandomHorizontalFlip() and CutMix on a valid set.
+
