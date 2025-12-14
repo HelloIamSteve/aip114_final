@@ -220,5 +220,4 @@ lunch500/
 *.zip
 
 # model result
-*results/*
-!*results/*_best.pt
+*results/*_last.pt

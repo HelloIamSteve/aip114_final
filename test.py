@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 import random
+import argparse
 
 from config import *
 from dataset import *
@@ -53,7 +54,23 @@ def test(model, val_loader, criterion, device):
     
     return loss_avg, accuracy, accuracy_top_5, cm
 
+def get_Model(model):
+    if model == 'ResNet18':
+        return ResNet18
+    elif model == 'MobileNet_V3_Small':
+        return MobileNet_V3_Small
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model', choices=['ResNet18', 'MobileNet_V3_Small'], required=True)
+    parser.add_argument('--flip', action='store_true', default=False)
+    parser.add_argument('--cutmix', action='store_true', default=False)
+
+    args = parser.parse_args()
+    choose_model = args.model
+    use_flip = args.flip
+    use_cutmix = args.cutmix
+
     # device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'using: {device}')
@@ -73,11 +90,14 @@ if __name__ == '__main__':
     # model
     label_names = lunch500_val.labels
     out_features = len(label_names)
-    
-    # model = ResNet18(out_features=out_features, pretrained=True).to(device)
-    model = MobileNet_V3_Small(out_features=out_features, pretrained=True).to(device)
-    model.name += '_HorizontalFlip'
-    model.name += '_CutMix'
+    Model_builder = get_Model(choose_model)
+    model = Model_builder(out_features=out_features, pretrained=True).to(device)
+
+    if use_flip:
+        model.name += '_HorizontalFlip'
+    if use_cutmix:
+        model.name += '_CutMix'
+        
     model.load_state_dict(torch.load(f'./{model.name}_results/{model.name}_best.pt', weights_only=True))
     print(f'testing: {model.name}')
 
